@@ -19,7 +19,7 @@ N=500;
  * this contains the container weights.
  * Each location specifies the weight of a particular container.
  */
-weights = [5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20]
+weights = [5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20];
     
     // 5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20];
 
@@ -31,7 +31,7 @@ weights = [5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20]
  * a container location.
  * This value should be a power of 2
  */
-let container_location_size = 16;
+let container_location_size = 2;
 
 /**
  * The number of bits per gene.
@@ -94,69 +94,83 @@ var draw_missing_c_fit=0
 var draw_duplicate_c_fit=0
 var draw_balance_fit = 0;
 var draw_loc_vals;
+var row_size = 15;
 
 function draw() {
   background(51);
   doGa();
 
   if(frameCount%100 == 0){
-    //print(p_v);
     sample = sampleProbVector();
-
-    // draw_pointer_ary = calc_container_pointers(sample);
-
     draw_loc_vals = calc_loc_vector(sample);
-    print('loc_v=',draw_loc_vals);
+
+
     draw_missing_c_fit = missing_container_fitness(draw_loc_vals);
     draw_duplicate_c_fit = duplicate_container_fitness(draw_loc_vals);
     draw_balance_fit = balance_fitness(draw_loc_vals);
-    // print(loc_fitness);
     draw_left_wgt = w.slice(0,container_location_size/2).reduce((t,n)=>{return t+n;});
     draw_right_wgt = w.slice(container_location_size/2,container_location_size).reduce((t,n)=>{return t+n;});
-    print(`w = ${w}`)
-    
-    
     draw_wgts = calc_weight_vector(draw_loc_vals);   
-    
     draw_fitness = fitness(sample);
     
-    //text([left_wgt,right_wgt,left_wgt+right_wgt],10,70);
   }
   
-    //text(frameCount);
     fill(255, 255, 255);
+    row = row_size
 
+    text('frameCount',10,row)
+    text(frameCount, 100, row);  
+    row+=row_size
 
-    text('missing_c_fit',10,15)
-    text(draw_missing_c_fit,100,15)
+    text('missing_c_fit',10,row)
+    text(draw_missing_c_fit,100,row)
+    row +=row_size
 
-    text('duplic_c_fit',10,30)
-    text(draw_duplicate_c_fit,100,30)
-    
-    text('balance_fit',10,45)
-    text(draw_balance_fit,100,45)    
+    text('duplic_c_fit',10,row)
+    text(draw_duplicate_c_fit,100,row)
+    row+=row_size
 
-
-    text(frameCount, 10, 60);  
-
+    text('balance_fit',10,row)
+    text(draw_balance_fit,100,row)    
+    row+=row_size
 
 
     if(draw_wgts.length>0){
-        text('draw_wgts',10,70)
-        text(draw_wgts,100,70);
-        
-        text('draw_wgts sum',10,80)
-        text(draw_wgts.reduce((t,n)=>{return t+n;}),100,80);
+
+        text('weights sum',10,row)
+        text(draw_wgts.reduce((t,n)=>{return t+n;}),100,row);
+        row+=row_size
+
     }
     if(draw_loc_vals !== undefined){
-        text('draw_loc_vals',10,95)
-        text(draw_loc_vals,100,95);
+        text('location vals',10,row)
+        text(draw_loc_vals,100,row);
+        row+=row_size
 
         var test_ary = Array(container_location_size).fill(0);
         for(var i=0; i<draw_loc_vals.length; i++){
             test_ary[draw_loc_vals[i]]=test_ary[draw_loc_vals[i]]+1;
         }
         
+        
+        
+        
+        
+        //try to figure out how to stack the weights so they can be drawn.
+        var wght2dAry = Array(container_location_size).fill([]);
+        for(var i=0; i<draw_loc_vals.length; i++){
+          if( wght2dAry[i] == undefined){
+            wght2dAry[i] = []
+          }
+          var location = wght2dAry[i]
+          // print(location)
+          // test_ary[draw_loc_vals[i]]=test_ary[draw_loc_vals[i]]+1;
+      }        
+
+        /**
+         * draw each location as a weighted retangle.
+         * Each rectangle height should indicate how many containers are stacked.
+         */
         for(var i1=0; i1<test_ary.length; i1++){
             rect(200+i1*25, 400, 25, -(test_ary[i1]*5));
             text(test_ary[i1],(200+i1*25)+5,420)
@@ -165,13 +179,15 @@ function draw() {
 
     }
   
-    text('l wgt, r wgt = ',10,110)
-    text(draw_left_wgt,100,110);
-    text(draw_right_wgt,150,110);
+
+    text(`fitness: ${draw_fitness}`,10,row);
+    row+=row_size
+
+    text(p_v.map(x => x.toFixed(1)),10,row);
     
-    text(`fitness: ${draw_fitness}`,10,125);
-    text(p_v.map(x => x.toFixed(1)),10,140);
-    
+
+
+
     //draw the prob vector rectangles
     for(var pv_i=0; pv_i<p_v.length; pv_i++){
         push();
@@ -179,13 +195,12 @@ function draw() {
             fill('green')
             stroke('green')
         }
-        rect(pv_i*10, 200, 10, -p_v[pv_i]*50); 
+        rect(pv_i*10, 220, 10, -p_v[pv_i]*50); 
         pop();
     }
   
   
   //draw the left and right weight rectangles.
-  //someout need to scale this down; they get too tall
   if(draw_left_wgt>=0){
     rect(30, 400, 50, -draw_left_wgt*(draw_left_wgt/(total_weight*2)));
     text(draw_left_wgt,30+20, 415);
@@ -195,14 +210,20 @@ function draw() {
     rect(80, 400, 50, -draw_right_wgt*(draw_left_wgt/(total_weight*2)));
     text(draw_right_wgt,80+20, 415);
   }
-
-  
 }
+
+
+
+
+
+
+
+
 
 
 /*******************************************************
  * 
- * start GA functions
+ * start problem specific GA functions
  * 
  *******************************************************/
 
@@ -219,31 +240,6 @@ function bitToInt(b_ary){
     }
     return ret;
   }
-
-
-
-
-
-
-
-
-/**
- * Sample the probability vector.
- * Will return a bit array generated from the prob vectors
- */
-function sampleProbVector(){
-  sample = [];
-  for(var i=0; i<L; i++){
-    if(random()<p_v[i]){
-      sample.push(1);
-    }else{
-      sample.push(0);
-    }
-  }
-  return sample;
-}
-
-
 
 
 /**
@@ -297,7 +293,6 @@ function missing_container_fitness(loc_v){
     for(var i=0; i<loc_v.length; i++){
       test_ary[loc_v[i]]=test_ary[loc_v[i]]+1;
     }
-    //print('test_ary = ',test_ary);
     var fitness = 0;
     for(var j=0; j<test_ary.length; j++){
       if(test_ary[j]==0){
@@ -318,7 +313,6 @@ function duplicate_container_fitness(loc_v){
     for(var i=0; i<loc_v.length; i++){
         test_ary[loc_v[i]]=test_ary[loc_v[i]]+1;
       }
-      //print('test_ary = ',test_ary);
       var fitness = 0;
       for(var j=0; j<test_ary.length; j++){
         if(test_ary[j]>1){
@@ -346,39 +340,74 @@ function balance_fitness(loc_v){
 }
 
 
+/**
+ * Given an individual chromosome, compute the fitness
+ * @param {int[]} indiv 
+ */
 function fitness(indiv){
 
-    loc_v = calc_loc_vector(indiv);
-    missing_c_fitness = missing_container_fitness(loc_v);
-    duplicate_c_fitness = duplicate_container_fitness(loc_v);
-    bal_fitness = balance_fitness(loc_v);
-    return (bal_fitness+missing_c_fitness+duplicate_c_fitness);
+  loc_v = calc_loc_vector(indiv);
+  missing_c_fitness = missing_container_fitness(loc_v);
+  duplicate_c_fitness = duplicate_container_fitness(loc_v);
+  bal_fitness = balance_fitness(loc_v);
+  return (bal_fitness+missing_c_fitness+duplicate_c_fitness);
 }
+
+
+
+
+/**
+ * This area begins the generic cGA functions.
+ * 
+ */
+
+/**
+ * Given 2 individuals, allow them to compete, and return the winner,loser in an array.
+ * @param {int[]} player1 
+ * @param {int[]} player2 
+ */
+function compete(player1, player2){
+  ind1fit = fitness(player1)
+  ind2fit = fitness(player2)
+
+  if(ind1fit>ind2fit){
+    return([player1,player2]);
+  }else{
+    return([player2,player1]);
+  }
+}
+
+
+
+
+
+/**
+ * Sample the probability vector.
+ * Will return a bit array generated from the prob vectors
+ */
+function sampleProbVector(){
+  sample = [];
+  for(var i=0; i<L; i++){
+    if(random()<p_v[i]){
+      sample.push(1);
+    }else{
+      sample.push(0);
+    }
+  }
+  return sample;
+}
+
 
 function doGa(){
     s1 = sampleProbVector();
     s2 = sampleProbVector();
-    
 
     
-    fit1 = fitness(s1);
-    fit2 = fitness(s2);
-    //print(fit1);
-    //print(fit2);    
-    
-    if(fit1>fit2){
-      winner = s1;
-      loser = s2;
-    }else{
-      winner = s2;
-      loser = s1;
-    }
-    
-    //print(winner);
-    //print(loser);
-    
+    results = compete(s1,s2);
+    winner = results[0];
+    loser = results[1]
+
     for(var i=0; i<L; i++){
-      //print(winner[i], loser[i], winner[i] !== loser[i]);
       if(winner[i] !== loser[i]){
         if(winner[i]===1){
           p_v[i]+=1/N;
@@ -386,6 +415,5 @@ function doGa(){
           p_v[i]-=1/N;
         }
       }
-      //print(p_v[i]);
     }
 }
