@@ -346,7 +346,6 @@ function balance_fitness(loc_v){
 }
 
 
-
 function fitness(indiv){
 
     loc_v = calc_loc_vector(indiv);
