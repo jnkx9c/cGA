@@ -2,7 +2,7 @@
 /**
  * The probability vector
  */
-p_v = [];
+const p_v = [];
 
 /**
  * The 'population' size.
@@ -11,7 +11,30 @@ p_v = [];
  * Larger values slow convergence, but helps climb out of local optimas.
  * Smaller values speed up convergence, but ga might/will get stuck in local optima.
  */
-N=500;
+const N=100;
+
+
+
+function generateWeights(c){
+  var weights = []
+  for(var i = 0; i<c; i++){
+    r = Math.random();
+    if ( r < 0.15){
+      weights.push(20)
+    }else if( r<.30){
+      weights.push(15)
+    }else if(r < 0.60){
+      weights.push(10);
+    }else{
+      weights.push(5);
+    }
+  }
+  console.debug(weights)
+  return weights;
+}
+
+
+const container_count = 2**9;
 
 
 // weights = [5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20];
@@ -19,9 +42,12 @@ N=500;
  * this contains the container weights.
  * Each location specifies the weight of a particular container.
  */
-weights = [5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20];
-    
+const weights = generateWeights(container_count)
+//[5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20];
+const weights_colors={5:'green',10:'yellow',15:'orange',20:'red'};
     // 5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20];
+
+
 
 /**
  * This is the number of spaces that containers
@@ -31,7 +57,13 @@ weights = [5,10,5,15,5,20,15,10,5,15,20,20,5,15,5,20,5,10,5,15,5,20,15,10,5,15,2
  * a container location.
  * This value should be a power of 2
  */
-let container_location_size = 2;
+const container_location_size = 32;
+
+
+
+const max_height=container_count/container_location_size;
+console.log(`max_height = ${max_height}`)
+const max_height_penalty = 100
 
 /**
  * The number of bits per gene.
@@ -48,7 +80,7 @@ let g_len = Math.log2(container_location_size);
  * log2(container_location_size)*number of weights.
  * 
  */
- let L = g_len*weights.length;
+ let L = g_len*container_count;
 
  let total_weight = weights.reduce((t,n)=>{return t+n;});
 
@@ -62,22 +94,28 @@ const missing_container_pen = -100;
  * this is the penalty assigned for each duplicate container in a solution.
  */
 const duplicate_container_pen = -200;
-var draw_wgts = [];
 
 
 
-function generateWeights(){
-  
-}
+var paused = false;
 
 /**
  * p5 setup function
  */
 function setup() {
-  createCanvas(displayWidth, 500);  
+  createCanvas(displayWidth, 600);  
   for(i=0; i<L; i++){
    p_v.push(0.5); 
   }
+  button = createButton('pause');
+  button.position(10, 10);
+  button.mousePressed(function(){
+    paused = !paused
+    console.log(`paused = ${paused}`)
+    
+    console.debug(this.elt)
+    console.debug(this);
+  });
   
 }
 
@@ -93,47 +131,66 @@ var draw_pointer_ary;
 var draw_missing_c_fit=0
 var draw_duplicate_c_fit=0
 var draw_balance_fit = 0;
+var draw_height_fit = 0;
 var draw_loc_vals;
 var row_size = 15;
+var draw_wgts = [];
+
+var pvbar_w = 3
+
+
 
 function draw() {
   background(51);
-  doGa();
-
-  if(frameCount%100 == 0){
-    sample = sampleProbVector();
-    draw_loc_vals = calc_loc_vector(sample);
-
-
-    draw_missing_c_fit = missing_container_fitness(draw_loc_vals);
-    draw_duplicate_c_fit = duplicate_container_fitness(draw_loc_vals);
-    draw_balance_fit = balance_fitness(draw_loc_vals);
-    draw_left_wgt = w.slice(0,container_location_size/2).reduce((t,n)=>{return t+n;});
-    draw_right_wgt = w.slice(container_location_size/2,container_location_size).reduce((t,n)=>{return t+n;});
-    draw_wgts = calc_weight_vector(draw_loc_vals);   
-    draw_fitness = fitness(sample);
-    
-  }
+  if(!paused){
+    doGa();
   
+
+    if(frameCount%100 == 0){
+      sample = sampleProbVector();
+      draw_loc_vals = calc_loc_vector(sample);
+
+
+      // draw_missing_c_fit = missing_container_fitness(draw_loc_vals);
+      // draw_duplicate_c_fit = duplicate_container_fitness(draw_loc_vals);
+      draw_balance_fit = balance_fitness(draw_loc_vals);
+      draw_height_fit = fitness_container_heights(draw_loc_vals);
+      draw_left_wgt = w.slice(0,container_location_size/2).reduce((t,n)=>{return t+n;});
+      draw_right_wgt = w.slice(container_location_size/2,container_location_size).reduce((t,n)=>{return t+n;});
+      draw_wgts = calc_weight_vector(draw_loc_vals);   
+      draw_fitness = fitness(sample);
+      
+    }
+  }
     fill(255, 255, 255);
-    row = row_size
+    row = row_size + 30
 
     text('frameCount',10,row)
     text(frameCount, 100, row);  
     row+=row_size
 
-    text('missing_c_fit',10,row)
-    text(draw_missing_c_fit,100,row)
-    row +=row_size
-
-    text('duplic_c_fit',10,row)
-    text(draw_duplicate_c_fit,100,row)
+    text('container_count',10,row)
+    text(container_count,100,row)    
     row+=row_size
+
+    text('max_height',10,row)
+    text(max_height,100,row)    
+    row+=row_size
+
 
     text('balance_fit',10,row)
     text(draw_balance_fit,100,row)    
     row+=row_size
 
+    text('height_fit',10,row)
+    text(draw_height_fit,100,row)    
+    row+=row_size
+
+
+
+    text('wgts',10,row)
+    text(draw_wgts,100,row)    
+    row+=row_size
 
     if(draw_wgts.length>0){
 
@@ -157,33 +214,60 @@ function draw() {
         
         
         //try to figure out how to stack the weights so they can be drawn.
-        var wght2dAry = Array(container_location_size).fill([]);
-        for(var i=0; i<draw_loc_vals.length; i++){
-          if( wght2dAry[i] == undefined){
-            wght2dAry[i] = []
+          var wght2dAry = []
+          for(var i=0; i<container_location_size; i++){
+            wght2dAry.push([])
           }
-          var location = wght2dAry[i]
-          // print(location)
-          // test_ary[draw_loc_vals[i]]=test_ary[draw_loc_vals[i]]+1;
-      }        
+          
+          for(var i=0; i<draw_loc_vals.length; i++){
+            con_loc = draw_loc_vals[i]
+            wgtForLoc = weights[i]
+            // print(`con_loc ${con_loc} has a wgt of ${wgtForLoc}`)
+            if( wght2dAry[con_loc] == undefined){
+              wght2dAry[con_loc] = []
+            }
+            // console.log(`pushing wft ${wgtForLoc} into con_loc ${con_loc}`)
+            wght2dAry[con_loc].push(wgtForLoc)
+          } 
 
-        /**
+          var con_w=15
+          var con_h=10
+          push()
+          for(var i=0; i<container_location_size; i++){
+            var y = 0;
+            for(var j=0; j<wght2dAry[i].length; j++){
+              fill(weights_colors[wght2dAry[i][j]])
+              rect(200+i*con_w, 500-y, con_w, -con_h)
+              y=y+con_h
+            }
+          }
+          pop();
+
+          push();
+          stroke('red');
+          line(200-10, 500-max_height*con_h, 200+10+wght2dAry.length*con_w, 500-max_height*con_h);
+          pop();
+          text('max height',200+20+wght2dAry.length*con_w, 500-max_height*con_h)
+          /**
          * draw each location as a weighted retangle.
          * Each rectangle height should indicate how many containers are stacked.
          */
+        push()
+        textSize(8);
+        
         for(var i1=0; i1<test_ary.length; i1++){
-            rect(200+i1*25, 400, 25, -(test_ary[i1]*5));
-            text(test_ary[i1],(200+i1*25)+5,420)
-            text(draw_wgts[i1],(200+i1*25)+5,440)
+          // rect(200+i1*25, 400, 25, -(test_ary[i1]*5));
+          text(test_ary[i1],(200+i1*con_w)+5,520)
+          text(draw_wgts[i1],(200+i1*con_w)+5,540)
         }
-
+        pop()
     }
   
 
     text(`fitness: ${draw_fitness}`,10,row);
     row+=row_size
 
-    text(p_v.map(x => x.toFixed(1)),10,row);
+    // text(p_v.map(x => x.toFixed(1)),10,row);
     
 
 
@@ -193,23 +277,24 @@ function draw() {
         push();
         if(abs(p_v[pv_i]-1.0) < 0.0003 || abs(p_v[pv_i]) <0.0003 ){
             fill('green')
-            stroke('green')
+            // stroke('green')
         }
-        rect(pv_i*10, 220, 10, -p_v[pv_i]*50); 
+        rect(5+pv_i*pvbar_w, 220, pvbar_w, -p_v[pv_i]*50); 
         pop();
     }
   
   
   //draw the left and right weight rectangles.
   if(draw_left_wgt>=0){
-    rect(30, 400, 50, -draw_left_wgt*(draw_left_wgt/(total_weight*2)));
-    text(draw_left_wgt,30+20, 415);
+    rect(30, 500, 50, -draw_left_wgt*(draw_left_wgt/(total_weight*8)));
+    text(draw_left_wgt,30+20, 515);
   }
 
   if(draw_right_wgt>=0){
-    rect(80, 400, 50, -draw_right_wgt*(draw_left_wgt/(total_weight*2)));
-    text(draw_right_wgt,80+20, 415);
+    rect(80, 500, 50, -draw_right_wgt*(draw_left_wgt/(total_weight*8)));
+    text(draw_right_wgt,80+20, 515);
   }
+
 }
 
 
@@ -271,58 +356,34 @@ function calc_loc_vector(indiv){
 function calc_weight_vector(loc_v){
   var w = Array(container_location_size).fill(0);
   for(var i=0; i<weights.length; i++){
-    w[loc_v[i]]+=weights[loc_v[i]];
+    w[loc_v[i]]+=weights[i];
   }
   return w;
 }
 
 
 
-/**
- *      SUBPROBLEM fitness
- * Calculates a fitness based on the location vector.
- * Basically, it checks to ensure that all containers 
- * are present in the solution.
- * If any containers are missing, a penalty is added (per missing container).
- * The larger the penalty is, the faster the GA will work to solve this subproblem first.
- * @param {int[]} loc_v 
- */
-function missing_container_fitness(loc_v){
-    var test_ary = Array(container_location_size).fill(0);
+function fitness_container_heights(loc_v){
+  fit = 0;
 
-    for(var i=0; i<loc_v.length; i++){
-      test_ary[loc_v[i]]=test_ary[loc_v[i]]+1;
+  var locations = new Array(container_location_size).fill(0);
+  
+  for(var i=0; i<loc_v.length; i++){
+    locations[loc_v[i]]++
+  }
+
+  
+  for(var i=0; i<loc_v.length; i++){
+    if(locations[i]>max_height){
+      fit+= -(max_height_penalty*(locations[i]-max_height))
     }
-    var fitness = 0;
-    for(var j=0; j<test_ary.length; j++){
-      if(test_ary[j]==0){
-        fitness += missing_container_pen;
-      }
-    }
-    return fitness;
+  }
+  return fit
+  
+  //heres a fnc that rewards tall heights
+  // return Math.max(...locations)*100
+
 }
-
-/**
- * checks if there are any duplicate containers
- * in the solution.  
- * @param {int[]} loc_v 
- */
-function duplicate_container_fitness(loc_v){
-    var test_ary = Array(container_location_size).fill(0);
-    
-    for(var i=0; i<loc_v.length; i++){
-        test_ary[loc_v[i]]=test_ary[loc_v[i]]+1;
-      }
-      var fitness = 0;
-      for(var j=0; j<test_ary.length; j++){
-        if(test_ary[j]>1){
-          fitness += duplicate_container_pen;
-        }
-      }
-    return fitness;
-}
-
-
 
 
 /**
@@ -347,10 +408,10 @@ function balance_fitness(loc_v){
 function fitness(indiv){
 
   loc_v = calc_loc_vector(indiv);
-  missing_c_fitness = missing_container_fitness(loc_v);
-  duplicate_c_fitness = duplicate_container_fitness(loc_v);
+  // missing_c_fitness = missing_container_fitness(loc_v);
+  // duplicate_c_fitness = duplicate_container_fitness(loc_v);
   bal_fitness = balance_fitness(loc_v);
-  return (bal_fitness+missing_c_fitness+duplicate_c_fitness);
+  return (bal_fitness + fitness_container_heights(loc_v));
 }
 
 
