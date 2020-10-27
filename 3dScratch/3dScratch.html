@@ -1,0 +1,45 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PLEASE NO CHANGES BELOW THIS LINE (UNTIL I SAY SO) -->
+  <script language="javascript" type="text/javascript" src="../libraries/p5.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/gh/nicolaspanel/numjs@0.15.1/dist/numjs.min.js"></script> -->
+  <script language="javascript" type="text/javascript" src="3dScratch.js"></script>
+
+  <!-- OK, YOU CAN MAKE CHANGES BELOW THIS LINE AGAIN -->
+
+  <!-- This line removes any default padding and style.
+       You might only need one of these values set. -->
+  <style> body { padding: 0; margin: 0; display: flex} </style>
+</head>
+
+<body>
+  <div id="sketch-holder">
+    <!-- Our sketch will go here! -->
+  </div>
+
+  <div id="stats_sketch-holder" style="margin-left: 10px;">
+
+  </div>
+  <div id="fitness_holder">
+    <div>Frame Rate:<span id="frame_rate"></span></div>
+    <div>Generation:<span id="frame_count"></span></div>    
+    <div>Balance Fitness:<span id="fitness_balance"></span></div>
+    <div>Height Fitness:<span id="fitness_height"></span></div>
+    <div>Convergence: <span id="convergence"></span>%</div>
+    <div>Converged: <span id="converged"></span></div>
+    <div>Converged Bits: <span id="converged_bits"></span></div>
+    <div>Total Bits: <span id="total_bits"></span></div>
+    
+    
+
+  </div>
+  <div>
+    <div><button onclick="render_containers=!render_containers">Render Containers</button></div>
+    <div><button onclick="toggleRenderProbVector();">Render Prop Vector</button></div>
+  </div>
+
+</body>
+</html>
