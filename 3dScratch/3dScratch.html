@@ -16,30 +16,35 @@
 </head>
 
 <body>
-  <div id="sketch-holder">
-    <!-- Our sketch will go here! -->
-  </div>
-
   <div id="stats_sketch-holder" style="margin-left: 10px;">
 
   </div>
+  <div id="sketch-holder">
+    <!-- Our sketch will go here! -->
+  </div>
+  <div>
   <div id="fitness_holder">
     <div>Frame Rate:<span id="frame_rate"></span></div>
-    <div>Generation:<span id="frame_count"></span></div>    
+    <div>Generation:<span id="generation"></span></div>    
     <div>Balance Fitness:<span id="fitness_balance"></span></div>
     <div>Height Fitness:<span id="fitness_height"></span></div>
     <div>Convergence: <span id="convergence"></span>%</div>
     <div>Converged: <span id="converged"></span></div>
     <div>Converged Bits: <span id="converged_bits"></span></div>
     <div>Total Bits: <span id="total_bits"></span></div>
-    
-    
+  </div>
+  <div>
+    <div>Container Count:<span id="container_count"></span></div>
+    <div>Ship Width:<span id="ship_width"></span></div>
+    <div>Ship Length:<span id="ship_length"></span></div>
+    <div>Max Height:<span id="max_height"></span></div>
 
   </div>
   <div>
     <div><button onclick="render_containers=!render_containers">Render Containers</button></div>
     <div><button onclick="toggleRenderProbVector();">Render Prop Vector</button></div>
   </div>
+</div>
 
 </body>
 </html>

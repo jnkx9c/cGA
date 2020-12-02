@@ -2,8 +2,8 @@
 const prob_vector = [];
 
 const ship_width = 2**4; //should be a power of 2. will need lg(ship_width) bits in the x component of the gene
-const ship_length = 2**5; //should be a power of 2.  will need lg(ship_length) bits in the y component of the gene
-
+const ship_length = 2**7; //should be a power of 2.  will need lg(ship_length) bits in the y component of the gene
+const max_height = 8
 const gene_x_len = Math.log2(ship_width)
 const gene_y_len = Math.log2(ship_length)
 
@@ -12,8 +12,9 @@ const gene_len = Math.log2(ship_width) + Math.log2(ship_length);  //each gene wi
 const container_w = 10;
 const container_h = 10;
 const container_d = 10;
-const container_count = 4096;//2**7  //doesn't neccisarily? need to be a power of 2
+const container_count = 16000;//2**7  //doesn't neccisarily? need to be a power of 2
 
+let generation = 0;
 
 
 const weights = generateContainers(container_count); //this should be renamed to containers... but oh well.
@@ -32,7 +33,7 @@ var sample_height_fitness =0;
 var convergence = 0;
 var converged_bits = 0;
 var converged = false;
-var render_containers = false;
+var render_containers = true;
 var render_prob_vector = false;
 
 var html_fitness_balance;
@@ -40,6 +41,11 @@ var html_fitness_height;
 var html_convergence;
 var html_converged_bits;
 var html_converged;
+var html_container_count;
+var html_ship_width;
+var html_ship_length;
+var html_max_height;
+
 
 
 
@@ -50,18 +56,29 @@ const s = ( sketch ) => {
         for(i=0; i<L; i++){
             prob_vector.push(0.5); 
         }
+        sketch.frameRate(90)
         sketch.select("#total_bits").html(prob_vector.length);
         html_fitness_balance = sketch.select('#fitness_balance');
         html_fitness_height = sketch.select('#fitness_height');
         html_convergence = sketch.select('#convergence');
         html_converged_bits = sketch.select('#converged_bits')
         html_converged = sketch.select('#converged')
+        html_container_count = sketch.select("#container_count");
+        html_ship_width = sketch.select("#ship_width")
+        html_ship_length = sketch.select("#ship_length");
+        html_max_height = sketch.select("#max_height");
+
+        html_container_count.html(container_count);
+        html_ship_width.html(ship_width);
+        html_ship_length.html(ship_length);
+        html_max_height.html(max_height);
+
     }
     
     sketch.draw = () => {
         sketch.background(51);
         sketch.orbitControl();
-        sketch.select('#frame_count').html(sketch.frameCount)
+        sketch.select('#generation').html(generation)
         sketch.select('#frame_rate').html(sketch.round(sketch.frameRate()))
 
         
@@ -79,6 +96,9 @@ const s = ( sketch ) => {
             sample_location_vector = calc_loc_vector(sample_chromosome);
             sample_balance_fitness = fitness_balance(sample_location_vector);
             sample_height_fitness = fitness_height(sample_location_vector);
+            if(sample_balance_fitness + sample_height_fitness == 0){
+                converged=true
+            }
             
             html_fitness_balance.html(sample_balance_fitness);
             html_fitness_height.html(sample_height_fitness);
@@ -90,6 +110,7 @@ const s = ( sketch ) => {
         }
     
         if(render_containers === true){
+
             for(var i=0; i<sample_location_vector.length; i++){
                 sketch.push();
                 loc = sample_location_vector[i];
@@ -101,6 +122,15 @@ const s = ( sketch ) => {
                 sketch.box(container_w,container_h, container_d);
                 sketch.pop();        
             }
+            sketch.push();
+            sketch.fill('rgba(255,255,255,.25)');
+            // sketch.fill('white')
+            // sketch.box(ship_width*container_w, ship_length*container_d, max_height*container_h)
+            // sketch.box( ship_length*container_d,ship_width*container_w, max_height*container_h)
+            // sketch.box( ship_length*container_d, max_height*container_h,ship_width*container_w)
+            sketch.translate((ship_width*container_w/2)-container_w/2,  -max_height*container_h/2,  (ship_length*container_d/2)-container_d/2);
+            sketch.box(ship_width*container_w+1,  max_height*container_h+1,ship_length*container_d+1)
+            sketch.pop();            
         }
 
     
@@ -264,8 +294,8 @@ function fitness_height(loc_v){
     
     var fit = 0;
     for(var i=0; i<loc_v.length; i++){
-        if(loc_v[i][2]>7){  //the height is 0-indexed...  
-            fit -= (loc_v[i][2]-7)*100
+        if(loc_v[i][2]>(max_height-1)){  //the height is 0-indexed...  
+            fit -= (loc_v[i][2]-(max_height-1))*100
         }
     
     }
@@ -368,6 +398,9 @@ function doGaGeneration(){
     var s2 = sample();
 
     // s1 = hillclimber(s1)[0];
+    // s2 = hillclimber(s2)[0];
+
+    // s1 = hillclimber(s1)[0];
     var results = compete(s1,s2);
     var winner = results[0];
     var winner_fit = results[1];
@@ -391,7 +424,8 @@ function doGaGeneration(){
             prob_vector[i]-=1/N;
           }
         }
-    }    
+    } 
+    generation++;   
 }
 
 
